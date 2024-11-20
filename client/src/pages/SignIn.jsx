@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { signInStart, signInFailure, signInSuccess } from "../redux/user/userSlice.js";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // Added error state initialization
+  const { loading } = useSelector((state) => state.user);
+  const dispatch = useDispatch(); // Added useDispatch initialization
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -17,7 +20,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      dispatch(signInStart());
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: {
@@ -28,35 +31,33 @@ const SignIn = () => {
       const data = await res.json();
 
       if (!res.ok || data.success === false) {
-        setLoading(false);
+        dispatch(signInFailure(data.message));
         setError(data.message || "An error occurred");
         return;
       }
-
-      setLoading(false);
-      setError(null);
+      dispatch(signInSuccess(data));
       navigate("/");
     } catch (err) {
-      setLoading(false);
-      setError(err.message || "Something went wrong");
+      dispatch(signInFailure(err.message));
+      setError("Network error. Please try again."); // Added error handling for network issues
     }
   };
 
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl text-center font-semibold my-7">Sign In</h1>
-      <form className="flex flex-col gap-4 " onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="email"
-          className="border p-3 rounded-lg "
+          className="border p-3 rounded-lg"
           id="email"
           onChange={handleChange}
         />
         <input
           type="password"
           placeholder="password"
-          className="border p-3 rounded-lg "
+          className="border p-3 rounded-lg"
           id="password"
           onChange={handleChange}
         />
@@ -64,7 +65,7 @@ const SignIn = () => {
           disabled={loading}
           className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
         >
-          {loading ? "Loading..." : "sign In"}
+          {loading ? "Loading..." : "Sign In"}
         </button>
       </form>
       <div className="flex gap-2 mt-5">
