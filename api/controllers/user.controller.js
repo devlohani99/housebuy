@@ -27,7 +27,7 @@ export const updateUser = async (req, res, next) => {
           password: req.body.password,
         },
       },
-      { new: true } // Ensures the updated document is returned
+      { new: true } 
     );
 
     if (!updatedUser) {
